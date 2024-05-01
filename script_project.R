@@ -1,4 +1,4 @@
-x  <- rev(data.frame(data = ts(serie$index)))
+x  <- data.frame(data = ts(serie$index))
 plot(x)
 
 
