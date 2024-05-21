@@ -24,12 +24,15 @@ grid()
 
 
 
-acf(xm) # on affiche les auto corrélation 
+acf(xm, main = "") # on affiche les auto corrélation 
 
 # il ya une tendance linéaire croissante on peut donc différencier une fois 
 
-xm_diff <- xm-lag(xm,-1)
-plot(xm_diff)
+xm_diff <- xm-lag(xm,-1) # Différenciation de la série
+plot(xm_diff, type = "l", col="blue", xlab="time", ylab="Index (Base 100)")
+
+
+
 acf(xm_diff)
 pacf(xm_diff)
 
@@ -37,46 +40,35 @@ pacf(xm_diff)
 
 plot(xm_diff)
 
-# existe il des racine unité 
+# Test racines unitaires et test de stationnarité
 
-adf_result <- adf.test(xm_diff)
+adf_result <- adf.test(xm_diff) # test ADF
 print(adf_result)
 
-# on rejette H0 = racine unité 
+pp_result <- pp.test(xm_diff) # test de Perron Phillips racine unitaire
+print(pp_result)
 
 
-pp_result <- pp.test(xm_diff)
-print(adf_result)
-
-# déterminer le ARIMA(p, q, d = 0) d = 0 car série tationnaire
-
+kpss_result <- kpss.test(xm_diff) # test KPSS de stationnarité
+print(kpss_result)
 
 
 
 
-y <- (xm_diff - mean(xm_diff)) #centrer la série
+# déterminer le ARIMA(p, q)
+
+
+
+
+
+y <- (xm_diff - mean(xm_diff)) # centrer la série
 
 plot(y)
-acf(y,20)
-pacf(y,20)
 
-# p = 6, q = 1
+par(mfrow = c(1, 2))
+acf(y,20, main = "")
+pacf(y,20, main = "")
 
-
-arima(y,c(6,0,1))
-arima302 <- arima(y,c(6,0,1)) #enregistre les r´esultats de l’estimation
-Box.test(arima302$residuals, lag=8, type="Ljung-Box", fitdf=7) 
-
-
-
-Qtests <- function(series, k, fitdf=0) {
-pvals <- apply(matrix(1:k), 1, FUN=function(l) {
-pval <- if (l<=fitdf) NA else Box.test(series, lag=l, type="Ljung-Box", fitdf=fitdf)$p.value
-return(c("lag"=l,"pval"=pval))
-})
-return(t(pvals))
-}
-Qtests(arima302$residuals, 20, 7)
 
 
 # vérification de tous les models 
@@ -137,6 +129,9 @@ names(pqs) <- paste0("arma(",selec[,1],",",selec[,2],")") #renomme les ´el´eme
 models <- lapply(pqs, function(pq) arima(y,c(pq[["p"]],0,pq[["q"]]))) #cr´ee une liste des mod`eles
 vapply(models, FUN.VALUE=numeric(2), function(m) c("AIC"=AIC(m),"BIC"=BIC(m))) #calcule les AIC et
 #BIC des mod`eles candidats
+
+
+
 
 
 T <- length(xm)
