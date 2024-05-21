@@ -1,6 +1,14 @@
 require(zoo) #format de serie temporelle pratique et facile d'utilisation (mais plus volumineux)
 require(tseries)
 
+install.packages("MASS")
+install.packages("ellipse")
+
+# Charger les packages
+library(MASS)
+library(ellipse)
+
+
 
 xm <- rev(zoo(serie_lt$index)) # création de l'objet Zoo
 length(xm) # le nombre d'observation de la série 
@@ -71,6 +79,15 @@ pacf(y,20, main = "")
 
 
 
+
+
+
+
+
+
+
+
+
 # vérification de tous les models 
 
 
@@ -133,33 +150,51 @@ vapply(models, FUN.VALUE=numeric(2), function(m) c("AIC"=AIC(m),"BIC"=BIC(m))) #
 
 
 
-
-T <- length(xm)
-
-
+arima101 <- arima(xm,c(1,1,1)) #
+print(arima101)
 
 
+Qtests <- function(series, k, fitdf=0) {
+  pvals <- apply(matrix(1:k), 1, FUN=function(l) {
+    pval <- if (l<=fitdf) NA else Box.test(series, lag=l, type="Ljung-Box", fitdf=fitdf)$p.value
+    return(c("lag"=l,"pval"=pval))
+  })
+  return(t(pvals))
+}
+Qtests(arima101$residuals, 20, 0)
+
+ris <- arima101$residuals
+
+
+mu = mean(xm_diff)
+T = length(xm)
+coefficients <- coef(arima101)
+coeff <- coefficients * c(1, -1)
+
+phi = 0.2628741 
+psi = 0.7032179
+
+
+variance_residus <- var(ris)
+
+X = (1- phi)*mu + (1+phi) * xm[T] - phi * xm[T-1] + ris[T] - psi * ris[T-1]
+
+Y = (1- phi)*mu + (1+phi) * X - phi *xm[T]
+
+
+sigma <- variance_residus * matrix(c(1, (1+phi) - psi , (1+phi) - psi, 1 + ((1+phi) - psi)**2), nrow = 2, byrow = TRUE)
+
+
+plot(ellipse(sigma, centre = c(X, Y),level = 0.95, draw = TRUE), type = 'l', xlab = expression(hat(X)[T+1]), ylab = expression(hat(X)[T+2]), main = 'Région de confiance 95%')
 
 
 
+# Remplir la zone sous l'ellipse avec une couleur spécifiée
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+points(X, Y, col = 'red', pch = 19)
+text(X, Y, labels = expression(hat(X)), pos = 3) 
+grid()
 
 
 
