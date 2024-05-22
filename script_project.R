@@ -10,7 +10,7 @@ require(tseries)
 #----------------------------------------------------------------------------
 
 xm <- rev(zoo(serie_lt$index)) # création de l'objet Zoo, la série temporelle
-T = length(xm) # le nombre d'observation de la série 
+T = length(xm) # le nombre d'observations de la série 
 
 
 dates <- paste0(serie_lt$time, "-01") 
@@ -60,11 +60,11 @@ print(kpss_result)
 
 
 
-# Le ARIMA(p, d,q)
+# Le ARIMA(p,d,q)
 
 
 
-y <- (xm_diff - mean(xm_diff)) # centrer la série différencié 
+y <- (xm_diff - mean(xm_diff)) # centrer la série différenciée
 
 plot(y) # afficher la série centrée
 
@@ -157,7 +157,7 @@ ris <- arima101$residuals # stocker les résidus du modèle
 
 mu = mean(xm_diff) # moyenne de la série différenciée
 
-coefficients <- coef(arima101) # coefficients du modèle 
+coefficients <- coef(arima101) # coéfficients du modèle 
 coeff <- coefficients * c(1, -1) # pour avoir ma1 et pas l'opposé
 
 phi = 0.2628741 # ar1
@@ -231,7 +231,7 @@ shapiro_test <- shapiro.test(ris)
 print(shapiro_test)
 
 
-# Test de Kolmogorov Smirnov qui ne rejette pas l'hypothèse de normalité
+# Test de Kolmogorov Smirnov 
 
 ks_test <- ks.test(ris, "pnorm", mean(ris), sd(ris))
 
