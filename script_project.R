@@ -168,14 +168,8 @@ variance_residus <- var(ris) # variance des résidus
 
 
 
-
 # X = (1 - phi) * mu + (1 + phi) * xm[T] + (- phi * xm[T-1] - psi * ris[T])
 # Y = (1- phi)*mu + (1+phi) * 100.0347 - phi * xm[T]
-
-
-
-
-
 
 
 
