@@ -8,7 +8,8 @@ install.packages("ellipse")
 library(MASS)
 library(ellipse)
 
-
+library(zoo)
+library(tseries)
 
 xm <- rev(zoo(serie_lt$index)) # création de l'objet Zoo
 length(xm) # le nombre d'observation de la série 
@@ -76,9 +77,6 @@ plot(y)
 par(mfrow = c(1, 2))
 acf(y,20, main = "")
 pacf(y,20, main = "")
-
-
-
 
 
 
@@ -169,7 +167,7 @@ ris <- arima101$residuals
 mu = mean(xm_diff)
 T = length(xm)
 coefficients <- coef(arima101)
-coeff <- coefficients * c(1, -1)
+coeff <- coefficients * c(1, -1) # pour amoir ma1 et pas l'opposé
 
 phi = 0.2628741 
 psi = 0.7032179
@@ -177,24 +175,73 @@ psi = 0.7032179
 
 variance_residus <- var(ris)
 
-X = (1- phi)*mu + (1+phi) * xm[T] - phi * xm[T-1] + ris[T] - psi * ris[T-1]
+# X = (1 - phi) * mu + (1 + phi) * xm[T] + (- phi * xm[T-1] - psi * ris[T])
+# Y = (1- phi)*mu + (1+phi) * 100.0347 - phi * xm[T]
 
-Y = (1- phi)*mu + (1+phi) * X - phi *xm[T]
+
+
+
+
+
+
+
+
+forecast_values <- predict(arima101, n.ahead=2) # caluculer les prédictions T+1 et T+2
+
+
+X <- forecast_values$pred[1]
+Y <- forecast_values$pred[2]
 
 
 sigma <- variance_residus * matrix(c(1, (1+phi) - psi , (1+phi) - psi, 1 + ((1+phi) - psi)**2), nrow = 2, byrow = TRUE)
 
+A_inv <- solve(sigma) # inverser la matrice sigma
 
-plot(ellipse(sigma, centre = c(X, Y),level = 0.95, draw = TRUE), type = 'l', xlab = expression(hat(X)[T+1]), ylab = expression(hat(X)[T+2]), main = 'Région de confiance 95%')
+
+plot(ellipse(A_inv, centre = c( X , Y),level = 0.95, draw = TRUE), type = 'l', xlab = expression(X[T+1]), ylab = expression(X[T+2]), main = 'Région de confiance 95%')
 
 
 
 # Remplir la zone sous l'ellipse avec une couleur spécifiée
 
 
-points(X, Y, col = 'red', pch = 19)
+points(100.0347, Y, col = 'red', pch = 19)
 text(X, Y, labels = expression(hat(X)), pos = 3) 
 grid()
+
+
+# Standardiser les résidus 
+
+ris = (ris - mean(ris))/(var(ris)*(1/2))
+
+
+
+# QQ- Plot 
+
+
+qqnorm(ris, main = "")
+qqline(ris, col = "red")
+grid()
+
+
+
+
+
+# Effectuer le test de Shapiro-Wilk
+shapiro_test <- shapiro.test(ris)
+
+# Afficher les résultats du test
+print(shapiro_test)
+
+
+# test de Kolmogorov Smirnov qui ne rejette pas l'hypothèse de normalité
+
+ks_test <- ks.test(ris, "pnorm", mean(ris), sd(ris))
+
+# Afficher les résultats du test
+print(ks_test)
+
+
 
 
 
